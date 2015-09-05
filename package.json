@@ -1,0 +1,38 @@
+{
+  "name": "react-component-illustrator",
+  "version": "0.0.0",
+  "description": "",
+  "license": "MIT",
+  "repository": "blai/react-component-illustrator",
+  "author": {
+    "name": "Brian Lai",
+    "email": "brian.lai.ym@gmail.com",
+    "url": "github.com/blai/react-component-illustrator"
+  },
+  "bin": "bin/cli",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "tap test/**/*.js"
+  },
+  "files": [
+    "index.js",
+    "cli.js"
+  ],
+  "keywords": [
+    "react",
+    "component",
+    "documentation"
+  ],
+  "dependencies": {
+    "babel": "^5.8.23",
+    "dox": "^0.8.0",
+    "globby": "^3.0.0",
+    "react-docgen": "^2.1.0",
+    "yargs": "^3.24.0"
+  },
+  "devDependencies": {
+    "tap": "^1.4.0"
+  }
+}
