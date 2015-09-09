@@ -17,8 +17,12 @@
     "test": "tap test/**/*.js"
   },
   "files": [
+    "bin/",
     "index.js",
-    "cli.js"
+    "license",
+    "package.json",
+    "readme.md",
+    "src/"
   ],
   "keywords": [
     "react",
