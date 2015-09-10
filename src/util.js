@@ -1,24 +1,25 @@
 
 import path from 'path';
+import fs from 'fs';
 
-export function generateManifest(items) {
-  items = items.map(digest);
-  return `module.exports = [${items}];`;
+export function generateManifest(options, items) {
+  if (options.dest) {
+    items = items.map(digest);
+  }
+
+  let contents = `module.exports = [${items}];`;
+
+  if (options.dest) {
+    fs.writeFileSync(options.dest, contents);
+  } else {
+    console.log(contents);
+  }
+
+  return items;
 }
 
 export function digest(item) {
   var str = JSON.stringify(item);
-  str = str.replace(/\}$/, `,renderer: require('${item.examplePath}')}`);
+  str = str.replace(/\}$/, `,renderer: require('${item.exampleRequirePath}')}`);
   return str;
-}
-
-export function relativePath(from, to) {
-  var destDir = path.dirname(from);
-  var relative = path.relative(destDir, to);
-
-  if (relative[0] !== '.') {
-    relative = `.${path.sep}${relative}`;
-  }
-
-  return relative;
 }
