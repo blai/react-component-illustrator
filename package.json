@@ -33,6 +33,7 @@
     "babel-runtime": "^5.8.24",
     "dox": "^0.8.0",
     "globby": "^3.0.0",
+    "mkdirp": "^0.5.1",
     "react-docgen": "^2.1.0",
     "yargs": "^3.24.0"
   },

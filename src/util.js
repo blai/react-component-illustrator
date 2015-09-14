@@ -1,6 +1,7 @@
 
 import path from 'path';
 import fs from 'fs';
+import mkdirp from 'mkdirp';
 
 export function generateManifest(options, items) {
   if (options.dest) {
@@ -10,6 +11,7 @@ export function generateManifest(options, items) {
   let contents = `module.exports = [${items}];`;
 
   if (options.dest) {
+    mkdirp.sync(path.dirname(options.dest));
     fs.writeFileSync(options.dest, contents);
   } else {
     console.log(contents);
