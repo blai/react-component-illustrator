@@ -95,6 +95,7 @@ export default class Illustrator {
   }
 
   getCommentTag(name) {
-    return this.store.exampleDoc.tags.find(tag => tag.type === name) || {};
+    var results = this.store.exampleDoc.tags.filter(tag => tag.type === name);
+    return results.length ? results[0] : {};
   }
 }

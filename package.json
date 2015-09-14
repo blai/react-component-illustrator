@@ -14,15 +14,15 @@
     "node": ">=0.10.0"
   },
   "scripts": {
-    "test": "tap test/**/*.js"
+    "test": "mocha --compilers js:babel/register -r test test/**/*.test.js",
+    "prepublish": "BABEL_ENV=production babel -d lib --optional runtime src"
   },
   "files": [
     "bin/",
-    "index.js",
     "license",
     "package.json",
     "readme.md",
-    "src/"
+    "lib/"
   ],
   "keywords": [
     "react",
@@ -30,13 +30,20 @@
     "documentation"
   ],
   "dependencies": {
-    "babel": "^5.8.23",
+    "babel-runtime": "^5.8.24",
     "dox": "^0.8.0",
     "globby": "^3.0.0",
     "react-docgen": "^2.1.0",
     "yargs": "^3.24.0"
   },
   "devDependencies": {
-    "tap": "^1.4.0"
+    "babel": "^5.8.23",
+    "babel-plugin-rewire": "^0.1.22",
+    "chai": "^3.2.0",
+    "mocha": "^2.3.2",
+    "rewire": "^2.3.4",
+    "sinon": "^1.16.1",
+    "sinon-as-promised": "^4.0.0",
+    "sinon-chai": "^2.8.0"
   }
 }

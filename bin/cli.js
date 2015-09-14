@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var main = require('../');
+var main = require('../lib');
 
 // ---
 
