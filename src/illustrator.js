@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import dox from 'dox';
 import {parse as parseRectDoc} from 'react-docgen';
+import {find, toRelativeJsPath} from './util';
 
 // ---
 
@@ -34,14 +35,8 @@ export default class Illustrator {
   processComponent(file) {
     return Promise.resolve(file)
       .then(this.record('componentPath'))
-      .then(() => {
-        let componentPath = path.resolve(this.store.examplePath, file);
-        if (!/\.js$/.test(componentPath)) {
-          componentPath += '.js';
-        }
-        return componentPath;
-      })
-      .then(path => fs.readFileSync(path, {encoding: 'utf-8'}))
+      .then(file => toRelativeJsPath(this.store.examplePath, file))
+      .then(file => fs.readFileSync(file, {encoding: 'utf-8'}))
       .then(this.record('componentSource'))
       .then(this.parseComponentDoc)
       .then(this.record('componentDoc'))
@@ -70,14 +65,23 @@ export default class Illustrator {
   }
 
   run() {
+    var component = this.store.componentPath ? Object.assign({
+      name: path.basename(this.store.componentPath, path.extname(this.store.componentPath)),
+      path: path.resolve(this.store.componentPath),
+      source: this.store.componentSource
+    }, this.store.componentDoc) : null;
+
+    var example = {
+      name: this.getCommentTag('name').string,
+      path: path.resolve(this.store.examplePath),
+      requirePath: this.store.exampleRequirePath,
+      description: this.store.exampleDoc.description.full,
+      source: this.store.exampleSource
+    };
+
     return {
-      componentDoc:       this.store.componentDoc,
-      componentPath:      this.store.componentPath,
-      componentSource:    this.store.componentSource,
-      exampleDoc:         this.store.exampleDoc,
-      examplePath:        this.store.examplePath,
-      exampleRequirePath: this.store.exampleRequirePath,
-      exampleSource:      this.store.exampleSource
+      component,
+      example
     };
   }
 

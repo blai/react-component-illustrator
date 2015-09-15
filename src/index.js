@@ -2,7 +2,7 @@ import path from 'path';
 
 import globby from 'globby';
 import Illustrator from './illustrator';
-import {generateManifest} from './util';
+import {generateManifest, aggregate} from './util';
 
 // ---
 
@@ -11,6 +11,7 @@ export function illustrate(patterns, options) {
 
   let components = globby(patterns, options)
     .then(paths => Promise.all(paths.map(path => illustrateOne(path, options))))
+    .then(aggregate)
   ;
 
   if (options.outputFormat === 'manifest') {
