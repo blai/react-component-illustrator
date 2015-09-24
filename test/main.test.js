@@ -6,56 +6,230 @@ import * as main from '../src'
 describe('index', function () {
 
   describe('#illustrate', function () {
-    it('should run', function () {
-      var parseAndValidateOptions;
-      var globby;
-      var generateManifest;
+    let parseAndValidateOptions;
+    let globby;
+    let illustrateOne;
+    let generateManifest;
+    let aggregate;
+    let options;
+    let patterns;
+    let paths;
+    let illustrations;
+    let result;
 
+    beforeEach(function () {
       main.__set__('parseAndValidateOptions', parseAndValidateOptions = this.sinon.stub());
       main.__set__('globby', globby = this.sinon.stub());
       main.__set__('generateManifest', generateManifest = this.sinon.stub());
+      main.__set__('aggregate', aggregate = this.sinon.stub());
+      main.__set__('illustrateOne', illustrateOne = this.sinon.stub());
+    });
 
-      var options = {};
-      var patterns = [path.resolve(__dirname, 'fixtures', '**', 'examples', '*.js')];
-      // return main.illustrate(patterns, options)
-      //   .then(function (items) {
-      //     items.should.have.length(3);
-      //   })
-      //   .catch(function (error) {
-      //     throw error;
-      //   })
-      // ;
+    afterEach(function () {
+      main.__ResetDependency__('parseAndValidateOptions');
+      main.__ResetDependency__('globby');
+      main.__ResetDependency__('generateManifest');
+      main.__ResetDependency__('aggregate');
+      main.__ResetDependency__('illustrateOne');
     })
-  })
-})
 
-// var path = require('path');
+    describe('with default options', function () {
+      beforeEach(function () {
+        options = {};
+        patterns = ['foo'];
+        paths = ['fux', 'fuux', 'fuuux'];
+        illustrations = paths.map((p, i) => {
+          return {
+            name: `${p}-name-${i}`,
+            path: `${p}-path-${i}`,
+            source: `${p}-source-${i}`
+          };
+        });
+        result = illustrations.map(() => ({}));
 
-// var tap = require('tap');
-// var sinon = require('sinon');
-// var rewire = require('rewire');
-// var main = rewire('../src');
+        globby.resolves(paths);
+        parseAndValidateOptions.returns(options);
+        illustrations.forEach((i, index) => illustrateOne.onCall(index).returns(i));
+        aggregate.resolves(result);
 
-// // ---
+        return this.result = main.illustrate(patterns, options);
+      });
 
-// tap.test('#illustrate', function (t) {
-//   var parseAndValidateOptions;
-//   var globby;
-//   var generateManifest;
+      it('should have parsed and validated options', function () {
+        return parseAndValidateOptions.should.have.been.calledWith(options);
+      });
 
-//   main.__set__('parseAndValidateOptions', parseAndValidateOptions = sinon.stub());
-//   main.__set__('globby', globby = sinon.mock(main.__get__('globby')));
-//   main.__set__('generateManifest', generateManifest = sinon.stub());
+      it('should have example glob patterns', function () {
+        return globby.should.have.been.calledWith(patterns);
+      });
 
-//   var options = {};
-//   var patterns = [path.resolve(__dirname, 'fixtures', '**', 'examples', '*.js')];
-//   var promise = main.illustrate(patterns, options)
-//     .then(function (items) {
-//       assert.equal(items.length, 3, 'should illustrate 3 examples');
-//     })
-//     .catch(function (error) {
-//       throw error;
-//     })
-//     .then(t.end)
-//   ;
-// });
+      it('should not generate manifest', function () {
+        return generateManifest.should.notCalled;
+      });
+
+      it('should have called illustrateOne for each path covered by glob pattern', function () {
+        return paths.forEach((p, i) => illustrateOne.getCall(i).should.have.been.calledWith(p, options));
+      });
+
+      it('should aggregate illustrations', function () {
+        return aggregate.should.have.been.calledWith(illustrations);
+      });
+
+      it('should resolves with aggregated results', function () {
+        return this.result.should.become(result)
+      });
+    });
+
+    describe('with outputFormat set to `manifest`', function () {
+      beforeEach(function () {
+        options = {outputFormat: 'manifest'};
+        patterns = ['foo'];
+        paths = ['fux', 'fuux', 'fuuux'];
+        illustrations = paths.map((p, i) => {
+          return {
+            name: `${p}-name-${i}`,
+            path: `${p}-path-${i}`,
+            source: `${p}-source-${i}`
+          };
+        });
+        result = illustrations.map(() => ({}));
+
+        globby.resolves(paths);
+        parseAndValidateOptions.returns(options);
+        illustrations.forEach((i, index) => illustrateOne.onCall(index).returns(i));
+        generateManifest.resolves(result);
+        aggregate.resolves(result);
+
+        return this.result = main.illustrate(patterns, options);
+      });
+
+      it('should have parsed and validated options', function () {
+        return parseAndValidateOptions.should.have.been.calledWith(options);
+      });
+
+      it('should have example glob patterns', function () {
+        return globby.should.have.been.calledWith(patterns);
+      });
+
+      it('should have generated manifest', function () {
+        return generateManifest.should.have.been.calledWith(options, result);
+      });
+
+      it('should have called illustrateOne for each path covered by glob pattern', function () {
+        return paths.forEach((p, i) => illustrateOne.getCall(i).should.have.been.calledWith(p, options));
+      });
+
+      it('should aggregate illustrations', function () {
+        return aggregate.should.have.been.calledWith(illustrations);
+      });
+
+      it('should resolves with aggregated results', function () {
+        return this.result.should.become(result)
+      });
+    });
+  });
+
+  describe('#illustrateOne', function () {
+    let Illustrator;
+    let illustrator;
+    let processExample;
+    let component;
+    let processComponent;
+    let run;
+    let file;
+    let options;
+    let result;
+
+    beforeEach(function () {
+      main.__set__('Illustrator', Illustrator = this.sinon.stub());
+      processExample = this.sinon.stub();
+      processComponent = this.sinon.stub();
+      run = this.sinon.stub();
+
+      Illustrator.returns(illustrator = {
+        processExample,
+        processComponent,
+        run
+      });
+    });
+
+    afterEach(function () {
+      main.__ResetDependency__('Illustrator');
+    });
+
+    describe('when `component` is specified in example', function () {
+      beforeEach(function () {
+        file = 'foo';
+        options = {};
+        illustrator.component = 'bar';
+
+        processExample.resolves();
+        processComponent.resolves();
+        run.resolves(result = {});
+
+        return this.result = main.illustrateOne(file, options);
+      });
+
+      it('should create an Illustrator instance', function () {
+        return Illustrator.should.have.been.calledWith(options);
+      });
+
+      it('should have called illustrator.processExample', function () {
+        return processExample.should.have.been.calledWith(file);
+      });
+
+      it('should have called illustrator.processComponent', function () {
+        return processComponent.should.have.been.calledWith(illustrator.component);
+      });
+
+      it('should have called illustrator.run', function () {
+        return run.should.have.been.calledOnce;
+      });
+
+      it('should resolves', function () {
+        return this.result.should.become(result);
+      });
+    });
+
+    describe('when `component` is not specified in example', function () {
+      beforeEach(function () {
+        file = 'foo';
+        options = {};
+
+        processExample.resolves();
+        run.resolves(result = {});
+
+        return this.result = main.illustrateOne(file, options);
+      });
+
+      it('should create an Illustrator instance', function () {
+        return Illustrator.should.have.been.calledWith(options);
+      });
+
+      it('should have called illustrator.processExample', function () {
+        return processExample.should.have.been.calledWith(file);
+      });
+
+      it('should not call illustrator.processComponent', function () {
+        return processComponent.should.have.not.been.called;
+      });
+
+      it('should have called illustrator.run', function () {
+        return run.should.have.been.calledOnce;
+      });
+
+      it('should resolves', function () {
+        return this.result.should.become(result);
+      });
+    });
+  });
+
+  describe('#parseAndValidateOptions', function () {
+    var pathResolve;
+    var options;
+
+    beforeEach(function () {
+      main.__set__('path', {resolve: pathResolve = this.sinon.stub()});
+    });
+  });
+});

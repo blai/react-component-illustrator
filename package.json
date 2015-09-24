@@ -30,8 +30,10 @@
     "documentation"
   ],
   "dependencies": {
+    "acorn-jsx-walk": "^1.0.1",
     "babel-runtime": "^5.8.24",
     "dox": "^0.8.0",
+    "escodegen-jsx": "0.1.0-1.4.2dev",
     "globby": "^3.0.0",
     "mkdirp": "^0.5.1",
     "react-docgen": "^2.1.0",

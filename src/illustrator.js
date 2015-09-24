@@ -3,6 +3,9 @@
 import fs from 'fs';
 import path from 'path';
 import dox from 'dox';
+import walk from 'acorn-jsx-walk';
+import {simple as walkNode} from 'acorn-jsx-walk/lib/walk';
+import escodegen from 'escodegen-jsx';
 import {parse as parseRectDoc} from 'react-docgen';
 import {find, toRelativeJsPath} from './util';
 
@@ -70,6 +73,17 @@ export default class Illustrator {
       path: path.resolve(this.store.componentPath),
       source: this.store.componentSource
     }, this.store.componentDoc) : null;
+
+    walk(this.store.exampleSource, {
+      MethodDefinition: (node) => {
+        if (node.key.name === 'render') {
+          console.log(node.value.body.body)
+          walkNode(node, {
+            JSXElement: node => console.log(escodegen.generate(node))
+          })
+        }
+      }
+    });
 
     var example = {
       name: this.getCommentTag('name').string,
