@@ -3,25 +3,29 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 
 export function generateManifest(options, items) {
-  if (options.dest) {
-    items = items.map(digest);
-  }
-
-  let contents = `module.exports = [${items}];`;
-
-  if (options.dest) {
-    mkdirp.sync(path.dirname(options.dest));
-    fs.writeFileSync(options.dest, contents);
-  } else {
-    console.log(contents);
+  if (options.outputFormat === 'commonjs') {
+    items = `module.exports = [${items.map(digest)}]`;
+  } else if (options.outputFormat === 'es6') {
+    items = `export default [${items.map(digest)}]`;
+  } else if (options.outputFormat === 'string') {
+    items = JSON.stringify(items);
   }
 
   return items;
 }
 
+export function writeToOutput(options, content) {
+  if (options.dest) {
+    mkdirp.sync(path.dirname(options.dest));
+    fs.writeFileSync(options.dest, content);
+  }
+
+  return content;
+}
+
 export function digest(item) {
   var str = JSON.stringify(item);
-  str = str.replace(/"exampleRequirePath"\s*:\s*("[^"]*")(\s*,?)/, '"renderer":require($1),$&');
+  str = str.replace(/"requirePath"\s*:\s*("[^"]*")(\s*,?)/, '"renderer":require($1),$&');
   return str;
 }
 
@@ -34,7 +38,11 @@ export function aggregate(items) {
       component = components[item.component.path] = item.component;
     }
 
-    component.examples ? component.examples.push(item.exmaple) : component.examples = [item.example];
+    component.examples = [...(component.examples || []), item.example];
+  }
+
+  if (!components.random.examples) {
+    delete components.random;
   }
 
   return Object.values(components);

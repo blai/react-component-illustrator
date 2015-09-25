@@ -20,8 +20,6 @@
   "files": [
     "bin/",
     "license",
-    "package.json",
-    "readme.md",
     "lib/"
   ],
   "keywords": [
@@ -33,18 +31,18 @@
     "acorn-jsx-walk": "^1.0.1",
     "babel-runtime": "^5.8.24",
     "dox": "^0.8.0",
-    "escodegen-jsx": "0.1.0-1.4.2dev",
     "globby": "^3.0.0",
     "mkdirp": "^0.5.1",
     "react-docgen": "^2.1.0",
+    "recast": "^0.10.33",
     "yargs": "^3.24.0"
   },
   "devDependencies": {
     "babel": "^5.8.23",
     "babel-plugin-rewire": "^0.1.22",
     "chai": "^3.2.0",
+    "chai-as-promised": "^5.1.0",
     "mocha": "^2.3.2",
-    "rewire": "^2.3.4",
     "sinon": "^1.16.1",
     "sinon-as-promised": "^4.0.0",
     "sinon-chai": "^2.8.0"

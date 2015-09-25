@@ -3,10 +3,10 @@
 import fs from 'fs';
 import path from 'path';
 import dox from 'dox';
+import recast from 'recast';
 import walk from 'acorn-jsx-walk';
 import {simple as walkNode} from 'acorn-jsx-walk/lib/walk';
-import escodegen from 'escodegen-jsx';
-import {parse as parseRectDoc} from 'react-docgen';
+import {parse as parseReactDoc} from 'react-docgen';
 import {find, toRelativeJsPath} from './util';
 
 // ---
@@ -30,7 +30,7 @@ export default class Illustrator {
       .then(this.record('exampleRequirePath'))
       .then(() => fs.readFileSync(file, {encoding: 'utf-8'}))
       .then(this.record('exampleSource'))
-      .then(this.parseExampleDoc)
+      .then(this.parseExampleDoc.bind(this))
       .then(this.record('exampleDoc'))
     ;
   }
@@ -47,18 +47,18 @@ export default class Illustrator {
   }
 
   parseExampleDoc(code) {
-    return dox.parseComments(code)[0];
+    return dox.parseComments(code, this.options.doxOptions)[0];
   }
 
   parseComponentDoc(code) {
-    return parseRectDoc(code);
+    return parseReactDoc(code);
   }
 
   relativePath() {
     let paths = Array.from(arguments, p => path.resolve(p));
-    paths.unshift(path.dirname(this.options.dest || path.resolve('.')));
+    paths.unshift(this.options.dest ? path.dirname(this.options.dest) : path.resolve('.'));
 
-    let relative = path.relative.apply(path, paths);
+    let relative = path.relative(...paths);
 
     if (relative[0] !== '.') {
       relative = `.${path.sep}${relative}`;
@@ -68,29 +68,23 @@ export default class Illustrator {
   }
 
   run() {
-    var component = this.store.componentPath ? Object.assign({
+    let component = this.store.componentPath ? Object.assign({
       name: path.basename(this.store.componentPath, path.extname(this.store.componentPath)),
       path: path.resolve(this.store.componentPath),
       source: this.store.componentSource
     }, this.store.componentDoc) : null;
 
     walk(this.store.exampleSource, {
-      MethodDefinition: (node) => {
-        if (node.key.name === 'render') {
-          console.log(node.value.body.body)
-          walkNode(node, {
-            JSXElement: node => console.log(escodegen.generate(node))
-          })
-        }
-      }
+      MethodDefinition: (node) => node.key.name === 'render' && this.record('exampleRender')(recast.print(node).code)
     });
 
-    var example = {
+    let example = {
       name: this.getCommentTag('name').string,
       path: path.resolve(this.store.examplePath),
       requirePath: this.store.exampleRequirePath,
       description: this.store.exampleDoc.description.full,
-      source: this.store.exampleSource
+      source: this.store.exampleSource,
+      renderSource: this.store.exampleRender
     };
 
     return {
@@ -108,12 +102,12 @@ export default class Illustrator {
       return null;
     }
 
-    var component = this.getCommentTag('component').string;
+    let component = this.getCommentTag('component').string;
     return component ? path.resolve(this.store.examplePath, component) : null;
   }
 
   getCommentTag(name) {
-    var results = this.store.exampleDoc.tags.filter(tag => tag.type === name);
+    let results = this.store.exampleDoc.tags.filter(tag => tag.type === name);
     return results.length ? results[0] : {};
   }
 }

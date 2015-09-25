@@ -11,6 +11,7 @@ describe('index', function () {
     let illustrateOne;
     let generateManifest;
     let aggregate;
+    let writeToOutput;
     let options;
     let patterns;
     let paths;
@@ -22,6 +23,7 @@ describe('index', function () {
       main.__set__('globby', globby = this.sinon.stub());
       main.__set__('generateManifest', generateManifest = this.sinon.stub());
       main.__set__('aggregate', aggregate = this.sinon.stub());
+      main.__set__('writeToOutput', writeToOutput = this.sinon.stub());
       main.__set__('illustrateOne', illustrateOne = this.sinon.stub());
     });
 
@@ -30,6 +32,7 @@ describe('index', function () {
       main.__ResetDependency__('globby');
       main.__ResetDependency__('generateManifest');
       main.__ResetDependency__('aggregate');
+      main.__ResetDependency__('writeToOutput');
       main.__ResetDependency__('illustrateOne');
     })
 
@@ -50,7 +53,9 @@ describe('index', function () {
         globby.resolves(paths);
         parseAndValidateOptions.returns(options);
         illustrations.forEach((i, index) => illustrateOne.onCall(index).returns(i));
-        aggregate.resolves(result);
+        aggregate.resolves(illustrations);
+        generateManifest.resolves(illustrations);
+        writeToOutput.resolves(illustrations);
 
         return this.result = main.illustrate(patterns, options);
       });
@@ -63,10 +68,6 @@ describe('index', function () {
         return globby.should.have.been.calledWith(patterns);
       });
 
-      it('should not generate manifest', function () {
-        return generateManifest.should.notCalled;
-      });
-
       it('should have called illustrateOne for each path covered by glob pattern', function () {
         return paths.forEach((p, i) => illustrateOne.getCall(i).should.have.been.calledWith(p, options));
       });
@@ -75,8 +76,16 @@ describe('index', function () {
         return aggregate.should.have.been.calledWith(illustrations);
       });
 
+      it('should generate manifest', function () {
+        return generateManifest.should.have.been.calledWith(options, illustrations);
+      });
+
+      it('should write to output', function () {
+        return writeToOutput.should.have.been.calledWith(options, illustrations);
+      });
+
       it('should resolves with aggregated results', function () {
-        return this.result.should.become(result)
+        return this.result.should.become(illustrations);
       });
     });
 
@@ -97,8 +106,9 @@ describe('index', function () {
         globby.resolves(paths);
         parseAndValidateOptions.returns(options);
         illustrations.forEach((i, index) => illustrateOne.onCall(index).returns(i));
-        generateManifest.resolves(result);
-        aggregate.resolves(result);
+        generateManifest.resolves(illustrations);
+        aggregate.resolves(illustrations);
+        writeToOutput.resolves(illustrations);
 
         return this.result = main.illustrate(patterns, options);
       });
@@ -111,10 +121,6 @@ describe('index', function () {
         return globby.should.have.been.calledWith(patterns);
       });
 
-      it('should have generated manifest', function () {
-        return generateManifest.should.have.been.calledWith(options, result);
-      });
-
       it('should have called illustrateOne for each path covered by glob pattern', function () {
         return paths.forEach((p, i) => illustrateOne.getCall(i).should.have.been.calledWith(p, options));
       });
@@ -123,8 +129,16 @@ describe('index', function () {
         return aggregate.should.have.been.calledWith(illustrations);
       });
 
+      it('should have generated manifest', function () {
+        return generateManifest.should.have.been.calledWith(options, illustrations);
+      });
+
+      it('should write to output', function () {
+        return writeToOutput.should.have.been.calledWith(options, illustrations);
+      });
+
       it('should resolves with aggregated results', function () {
-        return this.result.should.become(result)
+        return this.result.should.become(illustrations);
       });
     });
   });
@@ -225,11 +239,72 @@ describe('index', function () {
   });
 
   describe('#parseAndValidateOptions', function () {
-    var pathResolve;
-    var options;
+    let parseAndValidateOptions;
+    let pathResolve;
+    let options;
+    let root;
+    let dest;
 
     beforeEach(function () {
+      parseAndValidateOptions = main.__get__('parseAndValidateOptions');
       main.__set__('path', {resolve: pathResolve = this.sinon.stub()});
+    });
+
+    afterEach(function () {
+      main.__ResetDependency__('path');
+    });
+
+    describe('when called without custom options', function () {
+      beforeEach(function () {
+        pathResolve.onCall(0).returns(root = 'foo');
+        return this.result = parseAndValidateOptions();
+      });
+
+      it('should call call path.resolve once for the default options.root', function () {
+        pathResolve.should.have.been.calledOnce
+          .and.have.been.calledWith('.')
+        ;
+      });
+
+      it('should return parsed options', function () {
+        this.result.should.be.deep.equal({root})
+      });
+    });
+
+    describe('when called with empty custom options', function () {
+      beforeEach(function () {
+        pathResolve.onCall(0).returns(root = 'foo');
+        return this.result = parseAndValidateOptions(options = {});
+      });
+
+      it('should call call path.resolve once for the default options.root', function () {
+        pathResolve.should.have.been.calledOnce
+          .and.have.been.calledWith('.')
+        ;
+      });
+
+      it('should return parsed options', function () {
+        this.result.should.be.deep.equal({root})
+      });
+    });
+
+    describe('when called with options.dest', function () {
+      beforeEach(function () {
+        dest = 'foo';
+        pathResolve.onCall(0).returns(root = 'bar');
+        pathResolve.onCall(1).returns(dest);
+        return this.result = parseAndValidateOptions({dest});
+      });
+
+      it('should call path.resolve for the default options.root and options.dest', function () {
+        pathResolve.should.have.been.calledTwice;
+        pathResolve.getCall(0).should.have.been.calledWith('.');
+        pathResolve.getCall(1).should.have.been.calledWith(dest);
+      });
+
+      it('should return parsed options', function () {
+        this.result.should.be.deep.equal({root, dest})
+      });
     });
   });
 });
