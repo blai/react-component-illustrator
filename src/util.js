@@ -19,7 +19,6 @@ export function writeToOutput(options, content) {
     mkdirp.sync(path.dirname(options.dest));
     fs.writeFileSync(options.dest, content);
   }
-    console.log(content);
 
   return content;
 }
