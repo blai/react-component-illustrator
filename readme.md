@@ -242,7 +242,7 @@ The type of output, one of:
 
 - commonjs
 
-  ```
+```
 module.exports = [
   {
     name: 'MyComponent',
@@ -261,8 +261,7 @@ module.exports = [
 ```
 
 - es6
-
-  ```
+```
 export default [
   {
     name: 'MyComponent',
@@ -281,8 +280,7 @@ export default [
 ```
 
 - string
-
-  ```
+```
 [
   {
     name: 'MyComponent',
