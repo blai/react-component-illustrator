@@ -20,6 +20,10 @@ export function writeToOutput(options, content) {
     fs.writeFileSync(options.dest, content);
   }
 
+  if (options.verbose) {
+    console.log(content);
+  }
+
   return content;
 }
 
